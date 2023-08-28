@@ -43,7 +43,7 @@ jobs:
     steps:
       - name: Fetch Labels
         id: fetch-labels
-        uses: ./actions/labelsworkflow
+        uses: ./.github/actions/labelsworkflow
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -67,11 +67,11 @@ jobs:
           echo "Labels from Repository: ${{ needs.Get_Labels.outputs.labels }}"
           echo "Discussion Labels: ${{ needs.get_info.outputs.disc_labels }}"
           
-          labels=${{ needs.Get_Labels.outputs.labels }}
-          discussion_labels=${{ needs.get_info.outputs.disc_labels }}
+          labels="${{ needs.Get_Labels.outputs.labels }}"
+          discussion_labels="${{ needs.get_info.outputs.disc_labels }}"
           
-          for label in "${labels[@]}"; do
-            for discussion_label in "${discussion_labels[@]}"; do
+          for label in $labels; do
+            for discussion_label in $discussion_labels; do
               if [ "$label.name" == "$discussion_label" ]; then
                 label_id=$(echo "$label" | jq -r '.id')
                 echo "Label '$discussion_label' found with ID: $label_id"
