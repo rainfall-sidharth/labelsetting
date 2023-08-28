@@ -46,7 +46,7 @@ jobs:
         
       - name: Fetch Labels
         id: fetch-labels
-        uses: ./.github/actions/labelsworkflow/labelsaddition
+        uses: ./actions/labelsworkflow/labelsaddition
 
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
