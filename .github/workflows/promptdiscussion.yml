@@ -43,7 +43,7 @@ jobs:
     steps:
       - name: Fetch Labels
         id: fetch-labels
-        uses: ./.github/actions/labelsworkflow
+        uses: ./actions/labelsworkflow
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
