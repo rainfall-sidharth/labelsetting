@@ -1,4 +1,4 @@
-name: Trigger Workflow on Discussion
+name: Document Workflow
 
 on:
   discussion:
@@ -6,27 +6,78 @@ on:
       - created
 
 jobs:
-  triage:
+  get_info:
     if: >-
       github.event.discussion.category.name == 'Prompt'
     runs-on: ubuntu-latest
+    outputs:
+      prompt_validation: ${{ steps.prompt_validation.outputs.validation }}
+      disc_body: ${{ steps.prompt.outputs.disc_body }}
+      disc_title: ${{ steps.prompt.outputs.disc_title }}
+      repo_ID: ${{ steps.prompt.outputs.repo_ID }}
+      disc_labels: ${{ steps.prompt.outputs.disc_labels }}
+      disc_ID: ${{ steps.prompt.outputs.disc_ID }}
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: workflow steps
+      - name: Get discussion information
         id: prompt
-        run: |
-          echo "body=$(echo '${{ toJson(github.event) }}' | jq '.discussion.body')" >> $GITHUB_OUTPUT
-          echo "title=$(echo '${{ toJson(github.event) }}' | jq '.discussion.title')" >> $GITHUB_OUTPUT
-          echo "repo_ID=$(echo '${{ toJson(github.event) }}' | jq -r '.repository.node_id')" >> $GITHUB_OUTPUT
+        uses: ./actions/discussionworkflow/eventmetadata
+        with:
+          PAT: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validation prompt with schema
+        id: prompt_validation
+        uses: sidharth-14/prompt_validation@main
+        with:
+          body: ${{ steps.prompt.outputs.disc_body }}
+          title: ${{ steps.prompt.outputs.disc_title }}
+          labels: ${{ steps.prompt.outputs.disc_labels }}
+
+  Get_Labels:
+    runs-on: ubuntu-latest
+    outputs:
+      labels: ${{ steps.fetch-labels.outputs.labels }}
+    steps:
+      - name: Fetch Labels
+        id: fetch-labels
+        uses: ./.github/actions/labelsworkflow
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  Blurb_Discussion:
+    if: needs.get_info.outputs.prompt_validation == 'valid'
+    runs-on: ubuntu-latest
+    needs: [get_info, Get_Labels]
+    steps:
+      - name: conditional test
+        run: echo "hello team"
 
       - name: Use Chatgpt Api
         id: chatgpt
         uses: ./actions/gptworkflow/gptapi
         with:
           api_key: ${{ secrets.API_KEY }}
-          prompt: ${{ steps.prompt.outputs.body }}
+          prompt: ${{ needs.get_info.outputs.disc_body }}
+
+      - name: Debug Labels
+        run: |
+          echo "Labels from Repository: ${{ needs.Get_Labels.outputs.labels }}"
+          echo "Discussion Labels: ${{ needs.get_info.outputs.disc_labels }}"
+          
+          labels=${{ needs.Get_Labels.outputs.labels }}
+          discussion_labels=${{ needs.get_info.outputs.disc_labels }}
+          
+          for label in "${labels[@]}"; do
+            for discussion_label in "${discussion_labels[@]}"; do
+              if [ "$label.name" == "$discussion_label" ]; then
+                label_id=$(echo "$label" | jq -r '.id')
+                echo "Label '$discussion_label' found with ID: $label_id"
+              fi
+            done
+          done
 
       - name: Create a new GitHub Discussion
         id: create-discussion
@@ -34,12 +85,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          title: ${{ steps.prompt.outputs.title }}
+          title: ${{ needs.get_info.outputs.disc_title }}
           body: ${{ steps.chatgpt.outputs.body }}
-          repository-id: ${{ steps.prompt.outputs.repo_ID }}
-          category-id: DIC_kwDOKFks384CYgtw   
-          # blurb category ID
-      - name: Print discussion url and id
-        run: |
-          echo discussion-id: ${{steps.create-discussion.outputs.discussion-id}} 
-          echo discussion-url: ${{steps.create-discussion.outputs.discussion-url}}
+          repository-id: ${{ needs.get_info.outputs.repo_ID }}
+          category-id: DIC_kwDOKIIfcc4CYvYw
+          labels: ${{ needs.Get_Labels.outputs.labels }} # Use the matched labels
