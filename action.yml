@@ -1,0 +1,9 @@
+name: Get Labels Action
+description: Fetches labels from a GitHub repository
+runs:
+  using: 'node12'
+  main: 'index.js'
+outputs:
+  labels: # Define an output for labels
+    description: 'Fetched labels'
+    value: ${{ steps.fetch-labels.outputs.labels }} # Use the step name to refer to the output
