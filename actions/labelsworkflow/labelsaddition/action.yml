@@ -1,9 +1,13 @@
-name: Get Labels Action
-description: Fetches labels from a GitHub repository
-runs:
-  using: 'node12'
-  main: 'index.js'
-outputs:
-  labels: # Define an output for labels
-    description: 'Fetched labels'
-    value: ${{ steps.fetch-labels.outputs.labels }} # Use the step name to refer to the output
+Get_Labels:
+  runs-on: ubuntu-latest
+  outputs:
+    labels: ${{ steps.fetch-labels.outputs.labels }}
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Fetch Labels
+      id: fetch-labels
+      uses: ./actions/labelsworkflow/labelsaddition
+      with:
+        token: ${{ secrets.API_KEY }} # Use the API_KEY secret
