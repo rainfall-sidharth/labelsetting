@@ -2,31 +2,32 @@ import fetch from "node-fetch";
 import * as core from "@actions/core";
 
 const accessToken = core.getInput("PAT");
-const discussionId = core.getInput("discussionID");
+const discussionId = core.getInput("discussionId");
 const updatingbody = core.getInput("updatedbody");
 console.log('discussionId', discussionId);
 console.log('updatingbody', updatingbody);
 
 const graphqlMutation = `
-    mutation {
-        updateDiscussion(input: {
-            discussionId: "${discussionId}",
-            body: "${updatingbody}"
-        }) {
-            discussion {
-                id
-                body
-            }
-        }
-    }
+mutation {
+   updateDiscussion(input: {
+      discussionId: "${discussionId}",
+      body: ${JSON.stringify(updatingbody)}
+   }) {
+      discussion {
+         id
+         body
+      }
+   }
+}
 `;
+
 
 const apiUrl = 'https://api.github.com/graphql';
 
 
 const headers = {
     "Content-Type": "application/json",
-    'Authorization': 'Bearer ' + accessToken,
+    'Authorization': 'Bearer '+ accessToken ,
 };
 
 
