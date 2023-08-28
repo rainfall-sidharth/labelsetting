@@ -2,7 +2,7 @@ const axios = require('axios');
 
 const repoOwner = 'rainfall-kiran';
 const repoName = 'labelsetting';
-const token = process.env.GITHUB_TOKEN;
+const token = process.env.API_KEY; // Use the API_KEY secret
 
 const headers = {
   Accept: 'application/vnd.github.v3+json',
