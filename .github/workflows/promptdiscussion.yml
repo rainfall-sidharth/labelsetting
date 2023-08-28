@@ -41,6 +41,9 @@ jobs:
     outputs:
       labels: ${{ steps.fetch-labels.outputs.labels }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
       - name: Fetch Labels
         id: fetch-labels
         uses: ./.github/actions/labelsworkflow/labelsaddition
