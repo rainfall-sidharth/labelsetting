@@ -48,7 +48,7 @@ jobs:
         id: fetch-labels
         uses: ./actions/labelsworkflow/labelsaddition
         with:
-          token: ${{ secrets.API_KEY }} # Use the API_KEY secret
+          PAT: ${{ secrets.GITHUB_TOKEN }} # Use the API_KEY secret
 
   Blurb_Discussion:
     if: needs.get_info.outputs.prompt_validation == 'valid'
